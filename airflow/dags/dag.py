@@ -40,6 +40,10 @@ def evaluate_task(**context):
     metrics = evaluate_model(model_path, test_path)
     context['ti'].xcom_push(key='r2' , value= metrics['r2' ])
     context['ti'].xcom_push(key = 'rmse' , value = metrics['rmse'])
+    context['ti'].xcom_push(key = 'mse' , value = metrics['mse'])
+    context['ti'].xcom_push(key = 'mae' , value = metrics['mae'])
+
+
 
 
 with DAG(
