@@ -1,28 +1,31 @@
 import os
 import pandas as pd
-import joblib
-from sklearn.linear_model import LinearRegression
+import mlflow 
+import mlflow.sklearn
+from sklearn.linear_model import LinearRegression , LassoCV , RidgeCV
+from sklearn.svm import SVR , LinearSVR
+from sklearn.ensemble import AdaBoostRegressor , VotingRegressor , RandomForestRegressor, StackingRegressor
+from xgboost import XGBRegressor
 
-MODEL_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs")
-os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
 
-def train_model(train_path: str) -> str:
+# MODEL_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs")
+# os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
+
+def train_model(train_path: str) -> dict[str , object]:
     df = pd.read_csv(train_path)
     X = df.drop('psychopathy', axis=1)
     y = df['psychopathy']
 
-    model = LinearRegression(
-        fit_intercept=True,
-        n_jobs=-1
-    )
-    model.fit(X, y)
 
-    # 파일명 지정
-    base_name = os.path.splitext(os.path.basename(train_path))[0]
-    model_filename = f"{base_name}_lr.pkl"
-    model_path = os.path.join(MODEL_OUTPUT_DIR, model_filename)
+    base_models = {'LinearRegression' :LinearRegression(fit_intercept=True,n_jobs=-1),
+                    'SVR' : SVR( kernel= 'rbf' , C= 1 , epsilon=0.1 ),
+                    'XGBRegressor' : XGBRegressor(n_estimators = 200, learning_rate = 0.1, max_depth=5, random_state = 42)       
+    }
 
-    # 모델 저장
-    joblib.dump(model, model_path)
+    trained = {}
 
-    return model_path
+    for name, model in base_models.items():
+        model.fit(X,y)
+        trained[name] = model
+
+    return trained
